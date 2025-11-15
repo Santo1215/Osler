@@ -15,8 +15,7 @@ const PerfilCompletoForm = ({ user, onSaved }) => {
 
   useEffect(() => {
     if (user) {
-      setForm((f) => ({
-        ...f,
+      setForm(({
         nombre: user.nombre || user.name || '',
         apellido: user.apellido || '',
         especialidad: user.especialidad || '',
