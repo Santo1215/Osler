@@ -1,0 +1,77 @@
+.detalles-section {
+  background-color: #f9f9f9;
+  padding: 80px 0;
+  text-align: center;
+}
+
+.contenedor-detalles {
+  width: 85%;
+  margin: 0 auto;
+}
+
+.titulo-detalles {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1b1b1b;
+}
+
+.subtitulo-detalles {
+  font-size: 1.1rem;
+  color: #555;
+  margin-top: 10px;
+  margin-bottom: 50px;
+}
+
+.grid-detalles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  justify-items: center;
+}
+
+.tarjeta-detalle {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 30px 20px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.tarjeta-detalle:hover {
+  transform: translateY(-5px);
+}
+
+.icono-detalle {
+  background-color: #22a7f0;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.tarjeta-detalle p {
+  color: #333;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.btn-detalles {
+  margin-top: 60px;
+  background-color: #22a7f0;
+  color: white;
+  border: none;
+  border-radius: 40px;
+  padding: 14px 40px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-detalles:hover {
+  background-color: #1b8ad1;
+}

@@ -1,0 +1,73 @@
+.citas-container {
+  /* Allow the container to grow a bit so the table can be wider */
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2.5rem;
+  background-color: #fff;
+  border-radius: 10px;
+  font-family: "Poppins", sans-serif;
+  box-sizing: border-box;
+  /* Enable horizontal scrolling on small viewports so the table can keep its larger layout */
+  overflow-x: auto;
+}
+
+.titulo-citas {
+  text-align: center;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.tabla-citas {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  /* Slightly larger text for readability */
+  font-size: 1.05rem;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+  /* Ensure the table expands horizontally if there are several columns */
+  min-width: 1000px;
+}
+
+.tabla-citas th {
+  background-color: #4ba3c3;
+  color: white;
+  font-weight: 600;
+  /* Increase header padding so columns look more spacious */
+  padding: 1rem;
+  border: 1px solid #ccc;
+}
+
+.tabla-citas td {
+  background-color: #e6e6e6;
+  /* Increase cell padding to make the table appear larger */
+  padding: 1rem;
+  border: 1px solid #ccc;
+  font-weight: 500;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.btn-link:hover {
+  color: #4ba3c3;
+  text-decoration: underline;
+}
+
+/* Responsive tweaks: on small screens remove min-width so table can shrink and allow horizontal scroll */
+@media (max-width: 1000px) {
+  .tabla-citas {
+    min-width: unset;
+    font-size: 0.95rem;
+  }
+
+  .citas-container {
+    padding: 1rem;
+  }
+}

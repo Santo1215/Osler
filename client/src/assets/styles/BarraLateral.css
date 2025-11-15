@@ -1,0 +1,177 @@
+.barra-lateral {
+  width: 230px;
+  background-color: #CEE8F3;
+  color: black;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: 1.5rem 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  transition: width 0.6s ease;
+  overflow: hidden; /* ❗️ ya no necesitamos scroll aquí */
+}
+
+
+.barra-lateral.colapsada {
+  width: 80px;
+}
+
+.barra-lateral.colapsada .logo h2 {
+  display: none;
+}
+
+.barra-lateral.colapsada:hover .icono-logo {
+  display: none;
+}
+
+.logo {
+  display: flex;    
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.imagen-ia{
+  width: 30px;
+  height: 30px;
+}
+
+.imagen-logo {
+  width: 40px; 
+  height: 40px;
+  object-fit: contain;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.barra-lateral.colapsada:hover .imagen-logo {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.barra-lateral.colapsada .imagen-logo {
+  width: 35px;
+  height: 35px;
+}
+
+.icono-logo {
+  font-size: 1.8rem;
+  color: #38bdf8;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 2rem;
+  flex-grow: 1; /* ✅ el menú usa el espacio disponible */
+  overflow-y: auto; /* ✅ si hay muchos items, el scroll se aplica solo al menú */
+  scrollbar-width: none;
+}
+
+.menu a {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  color: black;
+  text-decoration: none;
+  font-weight: 500;
+  width: 80%; 
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.menu a:hover {
+  color: #38bdf8;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Active link styling */
+.menu a.active {
+  background-color: #1b7cb0;
+  color: #fff;
+  font-weight: 700;
+}
+
+.menu a.active svg,
+.menu a.active img {
+  color: #fff; /* icons inline color */
+}
+
+.barra-lateral.colapsada .menu a {
+  justify-content: center; /* centra los íconos */
+  width: 100%; /* ocupa todo el ancho del bloque */
+  padding: 0.6rem 0; /* reduce el padding lateral */
+}
+
+/* Oculta el texto al colapsar, dejando solo el ícono */
+.barra-lateral.colapsada .menu a span {
+  display: none;
+}
+
+/* Centra también el icono visualmente */
+.barra-lateral.colapsada .menu a svg {
+  margin: 0 auto;
+}
+
+.usuario {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border-top: 1px solid #3d4147;
+  padding: 1rem;
+  flex-shrink: 0; /* ✅ evita que el usuario desaparezca */
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.icono-usuario{
+  width: 20px ;
+  height: 20px;
+}
+/* Texto del usuario con animación */
+.usuario span {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Al colapsar, centra el ícono y oculta el texto */
+.barra-lateral.colapsada .usuario {
+  justify-content: center;
+  gap: 0;
+}
+
+.barra-lateral.colapsada .usuario span {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none; /* evita clics en el texto oculto */
+}
+
+/* --- BOTÓN TIPO CHATGPT (solo ícono negro limpio) --- */
+.boton-colapsar {
+  position: absolute;
+  right: 20px;
+  top: 4.5%;
+  color: #000; /* negro sólido */
+  background: none; /* sin fondo */
+  border: none; /* sin bordes */
+  cursor: pointer;
+  opacity: 0;
+  font-size: 1.2rem; /* ajusta tamaño del ícono */
+  transition: opacity 0.2s ease, color 0.2s ease;
+  z-index: 5;
+}
+
+/* visible al pasar el mouse */
+.barra-lateral:hover .boton-colapsar {
+  opacity: 1;
+}
+
+/* hover animación sutil */
+.boton-colapsar:hover {
+  color: #38bdf8; /* azul al pasar el mouse */
+}

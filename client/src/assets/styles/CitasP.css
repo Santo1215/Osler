@@ -1,0 +1,167 @@
+.citas-container {
+  max-width: 1100px;
+  margin: 2.5rem auto;
+  padding: 2.25rem;
+  font-family: "Poppins", sans-serif;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  box-sizing: border-box;
+}
+
+.titulo-principal {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+.tarjetas-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+
+.tarjeta {
+  background-color: #f1f8fc;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  width: 300px;
+  text-align: center;
+  border: 1px solid rgba(27,124,176,0.08);
+}
+
+.tarjeta h3 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.tarjeta p {
+  margin: 0.4rem 0;
+}
+
+.btn-info {
+  background-color: transparent;
+  border: none;
+  color: #333;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.formulario {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 1.25rem;
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  align-items: start;
+}
+
+.fila {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+input,
+select {
+  flex: 1;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #e0e6ea;
+  border-radius: 8px;
+  font-size: 0.98rem;
+  background: #f7fbfd;
+}
+
+.agenda-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.calendar-box,
+.horas-box {
+  width: 100%;
+}
+
+.horas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.horas button {
+  background-color: #fff;
+  border: 1px solid #e6eef5;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.12s;
+}
+
+.horas button:hover,
+.horas button:focus {
+  background-color: #1b7cb0;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.btn-solicitar {
+  background-color: #1b7cb0;
+  color: #fff;
+  border: none;
+  padding: 0.85rem 1.6rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  justify-self: end;
+  transition: background-color 0.18s ease, transform 0.12s ease;
+}
+
+.btn-solicitar:hover {
+  background-color: #166a8e;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 1024px) {
+  .formulario {
+    grid-template-columns: 1fr;
+  }
+
+  .tarjeta {
+    width: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .citas-container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .tarjetas-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tarjeta {
+    width: 100%;
+  }
+
+  .fila {
+    flex-direction: column;
+  }
+
+  .acciones-form {
+    display: flex;
+    justify-content: stretch;
+  }
+}
