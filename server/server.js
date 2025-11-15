@@ -5,7 +5,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Ruta de prueba
@@ -54,28 +59,49 @@ app.get('/api/pacientes/:id', async (req, res) => {
 // Actualizar datos de un paciente (completar perfil)
 app.put('/api/pacientes/:id', async (req, res) => {
   const { id } = req.params;
-  const { nombre, apellido, genero, fecha_nacimiento, direccion, email, telefono } = req.body;
+  const { nombre, apellido, genero, fecha_nacimiento, direccion, email, telefono, barrio } = req.body;
+
   try {
     const result = await pool.query(
-      'UPDATE pacientes SET nombre = $1, apellido = $2, genero = $3, fecha_nacimiento = $4, direccion = $5, email = $6, telefono = $7 WHERE id = $8 RETURNING id, nombre, apellido, email, genero, fecha_nacimiento, direccion, telefono',
-      [nombre, apellido, genero, fecha_nacimiento, direccion, email, telefono, id]
+      `UPDATE pacientes 
+       SET nombre = $1, apellido = $2, genero = $3, fecha_nacimiento = $4,
+           direccion = $5, email = $6, telefono = $7, barrio = $8
+       WHERE id = $9
+       RETURNING id, nombre, apellido, genero, fecha_nacimiento, direccion, email, telefono, barrio`,
+      [nombre, apellido, genero, fecha_nacimiento, direccion, email, telefono, barrio, id]
     );
-    if (result && result.rows && result.rows.length > 0) {
-      return res.json(result.rows[0]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Paciente no encontrado' });
     }
-    return res.status(404).json({ message: 'Paciente no encontrado' });
+
+    res.json(result.rows[0]);
+
   } catch (error) {
     console.error('Error actualizando paciente:', error);
-    return res.status(500).json({ message: 'Error del servidor' });
+    res.status(500).json({ message: 'Error del servidor' });
   }
 });
+
 
 // =====================================
 //  DOCTORES
 // =====================================
-app.get('/api/doctores', async (req, res) => {
-  const result = await pool.query('SELECT * FROM doctores');
-  res.json(result.rows);
+app.get('/api/doctores/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('SELECT * FROM doctores WHERE id = $1', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Doctor no encontrado' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error obteniendo doctor:', error);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
 });
 
 // Actualizar datos de un doctor (completar perfil)
@@ -172,6 +198,83 @@ app.delete('/api/citas/:id', async (req, res) => {
     res.status(500).json({ message: 'Error del servidor' });
   }
 });
+
+// Obtener citas de un doctor por ID
+app.get('/api/doctores/:id/citas', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT c.id, c.hora_cita, c.fecha_cita, c.estado ,p.nombre AS paciente_nombre, p.apellido AS paciente_apellido
+       FROM citas c
+       INNER JOIN pacientes p ON p.id = c.paciente_id
+       WHERE c.doctor_id = $1
+       ORDER BY c.fecha_cita, c.hora_cita`,
+      [id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error obteniendo citas:", error);
+    res.status(500).json({ message: "Error del servidor" });
+  }
+});
+
+// GET /api/pacientes/:id/completo
+app.get("/pacientes/:id/completo", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Datos del paciente
+    const paciente = await pool.query(`
+      SELECT * FROM pacientes WHERE id = $1
+    `, [id]);
+
+    if (paciente.rowCount === 0) {
+      return res.status(404).json({ message: "Paciente no encontrado" });
+    }
+
+    // Historial
+    const historial = await pool.query(`
+      SELECT * FROM historial_medico WHERE paciente_id = $1 ORDER BY fecha_registro DESC
+    `, [id]);
+
+    // Cirugías
+    const cirugias = await pool.query(`
+      SELECT * FROM cirugias WHERE paciente_id = $1 ORDER BY fecha DESC
+    `, [id]);
+
+    res.json({
+      paciente: paciente.rows[0],
+      historial: historial.rows,
+      cirugias: cirugias.rows
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error cargando datos del paciente" });
+  }
+});
+
+app.post("/cirugias", async (req, res) => {
+  try {
+    const { doctor_id, paciente_id, fecha, tipo, complejidad, duracion_horas, complicaciones, descripcion } = req.body;
+
+    const r = await pool.query(`
+      INSERT INTO cirugias
+      (doctor_id, paciente_id, fecha, tipo, complejidad, duracion_horas, complicaciones, descripcion)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      RETURNING *
+    `, [doctor_id, paciente_id, fecha, tipo, complejidad, duracion_horas, complicaciones, descripcion]);
+
+    res.json(r.rows[0]);
+
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ error: "Error registrando cirugía" });
+  }
+});
+
 
 // =====================================
 //  HORARIOS

@@ -6,36 +6,72 @@ import PerfilCompletoForm from "./PerfilCompletoForm";
 const HomeD = () => {
   const [user, setUser] = useState(null);
   const [needsProfile, setNeedsProfile] = useState(false);
+  const [citas, setCitas] = useState([]);
 
   useEffect(() => {
+  const loadDoctor = async () => {
     try {
-      const raw = localStorage.getItem('user');
-      if (raw) {
-        const obj = JSON.parse(raw);
-        setUser(obj);
-        setNeedsProfile(!isProfileComplete(obj));
-      } else {
+      const raw = localStorage.getItem("user");
+      if (!raw) {
         setUser(null);
         setNeedsProfile(true);
+        return;
       }
-    } catch (e) {
-      setUser(null);
+
+      const u = JSON.parse(raw);
+      setUser(u);
+
+      // Solo cargar si tiene ID
+      if (!u.id) {
+        console.warn("El usuario no tiene ID, no se puede cargar desde backend");
+        setNeedsProfile(true);
+        return;
+      }
+
+      // Traer datos reales del backend
+      const res = await fetch(`http://localhost:5000/api/doctores/${u.id}`);
+      const doctor = await res.json();
+
+      setUser(doctor);
+      localStorage.setItem("user", JSON.stringify(doctor));
+
+      // Verificar perfil completo
+      setNeedsProfile(!isProfileComplete(doctor));
+      
+      if (u.id) {
+      const resCitas = await fetch(`http://localhost:5000/api/doctores/${u.id}/citas`);
+      const citasData = await resCitas.json();
+      setCitas(citasData);
+}
+
+    } catch (err) {
+      console.error("Error cargando el doctor:", err);
       setNeedsProfile(true);
     }
-  }, []);
-
-  const isProfileComplete = (u) => {
-    if (!u) return false;
-    // Required fields in server.js for doctores: nombre, especialidad, email, telefono, contraseña
-    const nombre = u.nombre || u.name || '';
-    const apellido = u.apellido || '';
-    const especialidad = u.especialidad || '';
-    const descripcion = u.descripcion || '';
-    const consultorio = u.consultorio || '';
-    const email = u.email || '';
-    const telefono = u.telefono || u.phone || '';
-    return [nombre, apellido, especialidad, descripcion, consultorio, email, telefono].every((s) => typeof s === 'string' && s.trim().length > 0);
   };
+
+  loadDoctor();
+}, []);
+
+
+const isProfileComplete = (u) => {
+  if (!u) return false;
+
+  const required = [
+    u.nombre,
+    u.apellido,
+    u.especialidad,
+    u.descripcion,
+    u.consultorio,
+    u.email,
+    u.telefono
+  ];
+
+  return required.every(
+    (value) => typeof value === "string" && value.trim().length > 0
+  );
+};
+
 
   const handleSaved = (updatedUser) => {
     // Save to localStorage and reload to ensure all components reflect the update
@@ -62,21 +98,29 @@ const HomeD = () => {
             <div className="contenedor-cajas">
               <div className="caja citas">
                 <h2>Citas</h2>
-                <p>Hoy tiene 3 citas:</p>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Paciente</th>
-                      <th>Hora</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>Mateo Delgado</td><td>8:00 AM</td></tr>
-                    <tr><td>Daniel Sandoval</td><td>11:00 AM</td></tr>
-                    <tr><td>Esteban Suarez</td><td>3:00 PM</td></tr>
-                  </tbody>
-                </table>
+
+                {citas.length === 0 ? (
+                  <p>No tienes citas para hoy.</p>
+                ) : (
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Paciente</th>
+                        <th>Hora</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {citas.map((cita) => (
+                        <tr key={cita.id}>
+                          <td>{cita.paciente_nombre} {cita.paciente_apellido}</td>
+                          <td>{cita.hora_cita}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
+
 
               <div className="caja estadisticas">
                 <h2>Estadísticas</h2>
