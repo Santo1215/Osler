@@ -1,0 +1,88 @@
+html {
+  scroll-behavior: smooth;
+}
+
+.hero {
+  background-image: url("../img/hero-fondo.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #0a0a0a;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  padding: 0 10%;
+  position: relative;
+}
+
+/* Oscurecer un poco la imagen si lo deseas */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.5); /* o usa un degradado */
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 600px;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.hero p {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.btn-primary {
+  display: inline-block;
+  margin-top: 2rem;
+  padding: 0.8rem 2rem;
+  border: 2px solid #00a0ff;
+  color: #00a0ff;
+  font-weight: 600;
+  border-radius: 30px;
+  text-decoration: none;
+  transition: 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #00a0ff;
+  color: white;
+}
+.porque {
+  text-align: center;
+  padding: 80px 10%;
+  background: #f7f9fc;
+}
+
+.testimonios {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.doctor-card {
+  max-width: 300px;
+  text-align: center;
+}
+
+.doctor-card img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.estrellas {
+  color: orange;
+  margin: 10px 0;
+}

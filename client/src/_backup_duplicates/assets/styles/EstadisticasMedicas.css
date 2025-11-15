@@ -1,0 +1,83 @@
+.layout-principal {
+  display: flex;
+  height: 100vh;
+  background-color: #f8fafc;
+  margin-left: 230px;
+  transition: margin-left 0.5s ease;
+}
+.layout-principal.colapsada{
+  margin-left: 80px;
+}
+/* Contenedor principal de las estadísticas */
+.contenido-estadisticas {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+/* Encabezado */
+.contenido-estadisticas h1 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #1b7cb0;
+}
+
+/* Grid de estadísticas */
+.grid-estadisticas { 
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 30px;
+}
+
+/* Cada caja */
+.caja-estadistica {
+  background: #fff;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.caja-estadistica h2 {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.caja-estadistica ul {
+  list-style: none;
+  padding: 0;
+}
+
+.caja-estadistica li {
+  background: #f0f8ff;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 5px;
+}
+
+.numero {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #1b7cb0;
+}
+
+.grande {
+  grid-column: span 2;
+  text-align: center;
+}
+
+
+/* ✅ RESPONSIVE */
+@media (max-width: 768px) {
+  .contenedor-estadisticas {
+    padding: 20px;
+  }
+
+  .caja-estadistica h2 {
+    font-size: 1rem;
+  }
+
+  .numero {
+    font-size: 2rem;
+  }
+}

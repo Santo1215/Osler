@@ -1,0 +1,122 @@
+.contenedor-home {
+  display: flex;
+  background-color: #ffffff;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.contenido-principal {
+  flex: 1;
+  margin-left: 240px; /* espacio para la barra lateral en escritorio */
+  padding: 50px;
+  transition: margin-left 0.4s ease;
+}
+
+.contenido-principal h1 {
+  text-align: center;
+  color: #1b1b1b;
+  margin-bottom: 40px;
+  font-size: 2rem;
+}
+
+.contenedor-cajas {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 50px;
+}
+
+.caja {
+  background-color: #f3f3f3;
+  border-radius: 12px;
+  padding: 30px;
+  width: 300px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.caja h2 {
+  background-color: #1b7cb0;
+  color: white;
+  border-radius: 10px 10px 0 0;
+  padding: 10px;
+  margin: -30px -30px 20px -30px;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.caja table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.caja th, .caja td {
+  padding: 8px;
+  text-align: left;
+}
+
+.caja th {
+  font-weight: bold;
+  color: #1b1b1b;
+}
+
+.caja td {
+  color: #333;
+}
+
+/* --- 💻 Escritorio --- */
+@media (min-width: 1025px) {
+  .contenido-principal {
+    margin-left: 230px; /* ancho real de tu barra lateral */
+  }
+}
+
+/* --- 📱 Tablets --- */
+@media (max-width: 1024px) {
+  .contenido-principal {
+    margin-left: 80px; /* barra colapsada */
+    padding: 40px 30px;
+  }
+
+  .contenedor-cajas {
+    gap: 30px;
+  }
+
+  .caja {
+    width: 260px;
+  }
+}
+
+/* --- 📱 Ajustes móviles: la barra lateral no cubre el contenido --- */
+@media (max-width: 768px) {
+  .barra-lateral {
+    position: fixed;
+    left: -230px; /* oculta fuera de pantalla */
+    top: 0;
+    height: 100vh;
+    z-index: 1000; 
+    transition: left 0.4s ease;
+  }
+
+  /* cuando esté activa (por ejemplo, al hacer clic en un botón hamburguesa) */
+  .barra-lateral.colapsada {
+    left: 0; /* se desliza hacia adentro */
+  }
+
+  .contenido-principal {
+    margin-left: 0 !important;
+    padding: 20px;
+  }
+}
+
+/* --- 📱 Pantallas muy pequeñas --- */
+@media (max-width: 480px) {
+  .caja {
+    padding: 20px;
+  }
+
+  .caja table th,
+  .caja table td {
+    font-size: 0.9rem;
+  }
+}
