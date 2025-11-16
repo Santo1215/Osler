@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from "react";
 import "../assets/styles/CitasMedicas.css";
 import BarraLateral from "./BarraLateral";
+import ModalDetallesPaciente from "./ModalDetallesPaciente";
+import ModalGestionCita from "./ModalGestionCita";
 
 const CitasMedicas = () => {
   const [citasHoy, setCitasHoy] = useState([]);
   const [citasProximas, setCitasProximas] = useState([]);
   const [user, setUser] = useState(null);
   const [colapsada, setColapsada] = useState(false);
-  const normalizarFecha = (iso) =>{
-              const date = new Date(iso);
-              const d = date.getDate().toString().padStart(2, "0");
-              const m = (date.getMonth() + 1).toString().padStart(2, "0");
-              return `${d}/${m}`;
-            };
+
+  // Estados para los modales
+  const [modalPacienteId, setModalPacienteId] = useState(null);
+  const [modalGestionCita, setModalGestionCita] = useState(null);
+
+  // --- Funciones para abrir modales ---
+  const abrirDetalles = (cita) => {
+    setModalPacienteId(cita.paciente_id);
+  };
+
+  const abrirGestion = (cita) => {
+    setModalGestionCita(cita);
+  };
 
   useEffect(() => {
     const loadCitas = async () => {
@@ -27,17 +36,11 @@ const CitasMedicas = () => {
 
         const hoy = new Date().toISOString().split("T")[0];
 
-        const hoyCitas = data.filter(
-          (c) => normalizarFecha(c.fecha_cita) === hoy
-        );
-
-        const futurasCitas = data.filter(
-          (c) => normalizarFecha(c.fecha_cita) > hoy
-        );
+        const hoyCitas = data.filter(c => c.fecha_cita.startsWith(hoy));
+        const futurasCitas = data.filter(c => c.fecha_cita > hoy);
 
         setCitasHoy(hoyCitas);
         setCitasProximas(futurasCitas);
-
       } catch (err) {
         console.error("Error cargando citas:", err);
       }
@@ -78,8 +81,25 @@ const CitasMedicas = () => {
                   <td>{cita.hora_cita}</td>
                   <td>{cita.paciente_nombre} {cita.paciente_apellido}</td>
                   <td>{cita.estado}</td>
-                  <td><button className="btn-link">Ver más</button></td>
-                  <td><button className="btn-link">Gestionar Cita</button></td>
+
+                  {/* Aquí agregamos el onClick */}
+                  <td>
+                    <button 
+                      className="btn-link" 
+                      onClick={() => abrirDetalles(cita)}
+                    >
+                      Ver más
+                    </button>
+                  </td>
+
+                  <td>
+                    <button 
+                      className="btn-link"
+                      onClick={() => abrirGestion(cita)}
+                    >
+                      Gestionar Cita
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
@@ -110,17 +130,53 @@ const CitasMedicas = () => {
             ) : (
               citasProximas.map((cita) => (
                 <tr key={cita.id}>
-                  <td>{new Date(cita.fecha_cita).toLocaleDateString("es-CO", {day: "2-digit",month: "long"})}</td>
+                  <td>{new Date(cita.fecha_cita).toLocaleDateString("es-CO", {
+                    day: "2-digit", month: "long"
+                  })}</td>
                   <td>{cita.hora_cita}</td>
                   <td>{cita.paciente_nombre} {cita.paciente_apellido}</td>
                   <td>{cita.estado}</td>
-                  <td><button className="btn-link">Ver más</button></td>
-                  <td><button className="btn-link">Gestionar Cita</button></td>
+
+                  <td>
+                    <button 
+                      className="btn-link" 
+                      onClick={() => abrirDetalles(cita)}
+                    >
+                      Ver más
+                    </button>
+                  </td>
+
+                  <td>
+                    <button 
+                      className="btn-link"
+                      onClick={() => abrirGestion(cita)}
+                    >
+                      Gestionar Cita
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
+
+
+        {/* Modal Detalles Paciente */}
+        {modalPacienteId && (
+          <ModalDetallesPaciente
+            pacienteId={modalPacienteId}
+            onClose={() => setModalPacienteId(null)}
+          />
+        )}
+
+        {/* Modal Gestión Cita */}
+        {modalGestionCita && (
+          <ModalGestionCita
+            cita={modalGestionCita}
+            doctor={user}
+            onClose={() => setModalGestionCita(null)}
+          />
+        )}
 
       </div>
     </div>

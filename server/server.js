@@ -205,7 +205,7 @@ app.get('/api/doctores/:id/citas', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT c.id, c.hora_cita, c.fecha_cita, c.estado ,p.nombre AS paciente_nombre, p.apellido AS paciente_apellido
+      `SELECT c.id, c.hora_cita, c.fecha_cita, c.estado, c.paciente_id, p.nombre AS paciente_nombre, p.apellido AS paciente_apellido
        FROM citas c
        INNER JOIN pacientes p ON p.id = c.paciente_id
        WHERE c.doctor_id = $1
@@ -221,7 +221,7 @@ app.get('/api/doctores/:id/citas', async (req, res) => {
 });
 
 // GET /api/pacientes/:id/completo
-app.get("/pacientes/:id/completo", async (req, res) => {
+app.get("/api/pacientes/:id/completo", async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -244,10 +244,16 @@ app.get("/pacientes/:id/completo", async (req, res) => {
       SELECT * FROM cirugias WHERE paciente_id = $1 ORDER BY fecha DESC
     `, [id]);
 
+    // Cita más reciente o pendiente
+    const cita = await pool.query(`
+      SELECT * FROM citas WHERE paciente_id = $1 ORDER BY fecha_cita DESC LIMIT 1
+    `, [id]);
+
     res.json({
       paciente: paciente.rows[0],
       historial: historial.rows,
-      cirugias: cirugias.rows
+      cirugias: cirugias.rows,
+      cita: cita.rows[0] || null
     });
 
   } catch (err) {
@@ -255,6 +261,7 @@ app.get("/pacientes/:id/completo", async (req, res) => {
     res.status(500).json({ error: "Error cargando datos del paciente" });
   }
 });
+
 
 app.post("/cirugias", async (req, res) => {
   try {
@@ -284,14 +291,224 @@ app.get('/api/horarios', async (req, res) => {
   res.json(result.rows);
 });
 
-// =====================================
+
 //  ESTADÍSTICAS DEL DOCTOR
-// =====================================
-app.get('/api/estadisticas/:idDoctor', async (req, res) => {
-  const { idDoctor } = req.params;
-  const result = await pool.query('SELECT * FROM estadisticas_doctor WHERE id_doctor = $1', [idDoctor]);
-  res.json(result.rows);
+// Función para calcular estadísticas semanales
+// ===========================
+const calcularEstadisticasSemana = async (doctorId, fechaInicio, fechaFin) => {
+  try {
+    const citasRes = await pool.query(
+      `SELECT *
+       FROM citas
+       WHERE doctor_id = $1
+         AND fecha_cita BETWEEN $2 AND $3`,
+      [doctorId, fechaInicio, fechaFin]
+    );
+
+    const citas = citasRes.rows;
+
+    let totalPacientes = 0;
+    let totalCirugias = 0;
+    let complicaciones = 0;
+    let duracionConsultas = 0;
+    let pacientesMasculinos = 0;
+    let pacientesFemeninos = 0;
+    let pacientesOtro = 0;
+    let cirugiasBaja = 0;
+    let cirugiasMedia = 0;
+    let cirugiasAlta = 0;
+    let enfermedadesMap = {};
+
+    citas.forEach(cita => {
+      totalPacientes++;
+      duracionConsultas += cita.duracion || 0;
+
+      // Género
+      if (cita.genero === "Masculino") pacientesMasculinos++;
+      else if (cita.genero === "Femenino") pacientesFemeninos++;
+      else pacientesOtro++;
+
+      // Cirugías
+      if (cita.cirugia) {
+        totalCirugias++;
+        if (cita.cirugia.complejidad === "Baja") cirugiasBaja++;
+        else if (cita.cirugia.complejidad === "Media") cirugiasMedia++;
+        else if (cita.cirugia.complejidad === "Alta") cirugiasAlta++;
+
+        if (cita.cirugia.complicacion) complicaciones++;
+      }
+
+      // Enfermedades
+      if (cita.diagnostico) {
+        if (!enfermedadesMap[cita.diagnostico]) enfermedadesMap[cita.diagnostico] = 0;
+        enfermedadesMap[cita.diagnostico]++;
+      }
+    });
+
+    const enfermedadesComunes = Object.entries(enfermedadesMap).map(([name, count]) => ({ name, count }));
+
+    // Insertar o actualizar registro
+    await pool.query(
+      `INSERT INTO estadisticas_doctores(
+        doctor_id, total_pacientes_atendidos, total_cirugias, tasa_complicaciones, duracion_promedio_consulta,
+        pacientes_masculinos, pacientes_femeninos, pacientes_otro,
+        cirugias_baja_complejidad, cirugias_media_complejidad, cirugias_alta_complejidad,
+        enfermedades_comunes, fecha_actualizacion
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW())
+      ON CONFLICT (doctor_id) DO UPDATE SET
+        total_pacientes_atendidos=$2,
+        total_cirugias=$3,
+        tasa_complicaciones=$4,
+        duracion_promedio_consulta=$5,
+        pacientes_masculinos=$6,
+        pacientes_femeninos=$7,
+        pacientes_otro=$8,
+        cirugias_baja_complejidad=$9,
+        cirugias_media_complejidad=$10,
+        cirugias_alta_complejidad=$11,
+        enfermedades_comunes=$12,
+        fecha_actualizacion=NOW()`,
+      [
+        doctorId,
+        totalPacientes,
+        totalCirugias,
+        totalCirugias > 0 ? (complicaciones / totalCirugias) * 100 : 0,
+        totalPacientes > 0 ? duracionConsultas / totalPacientes : 0,
+        pacientesMasculinos,
+        pacientesFemeninos,
+        pacientesOtro,
+        cirugiasBaja,
+        cirugiasMedia,
+        cirugiasAlta,
+        JSON.stringify(enfermedadesComunes),
+      ]
+    );
+
+  } catch (err) {
+    console.error("Error en calcularEstadisticasSemana:", err);
+  }
+};
+
+// ===========================
+// Endpoint: estadísticas semanales
+// ===========================
+app.get("/api/doctores/:id/estadisticas/semanal", async (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: "DoctorId requerido" });
+
+  try {
+    const fechaFin = new Date();
+    const fechaInicio = new Date();
+    fechaInicio.setDate(fechaFin.getDate() - 7);
+
+    await calcularEstadisticasSemana(id, fechaInicio.toISOString(), fechaFin.toISOString());
+
+    const result = await pool.query("SELECT * FROM estadisticas_doctores WHERE doctor_id=$1", [id]);
+
+    if (result.rows.length === 0) {
+      return res.json({
+        total_pacientes_atendidos: 0,
+        pacientes_masculinos: 0,
+        pacientes_femeninos: 0,
+        pacientes_otro: 0,
+        total_cirugias: 0,
+        tasa_complicaciones: 0,
+        duracion_promedio_consulta: 0,
+        cirugias_baja_complejidad: 0,
+        cirugias_media_complejidad: 0,
+        cirugias_alta_complejidad: 0,
+        enfermedades_comunes: [],
+      });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo estadísticas" });
+  }
 });
+
+app.put("/api/doctores/:id/estadisticas", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      nuevaConsulta = false,
+      nuevaCirugia = null, // { complejidad: "Baja"|"Media"|"Alta", duracion_horas: number, complicacion: true|false }
+      generoPaciente = null, // "Masculino", "Femenino", "Otro"
+      duracionConsulta = 0, // minutos
+      enfermedad = null // nombre de la enfermedad para contar
+    } = req.body;
+
+    // Crear registro si no existe
+    await pool.query(`
+      INSERT INTO estadisticas_doctores(doctor_id)
+      VALUES ($1)
+      ON CONFLICT (doctor_id) DO NOTHING
+    `, [id]);
+
+    // Actualizar métricas generales
+    let updateQuery = `
+      UPDATE estadisticas_doctores SET
+        total_pacientes_atendidos = total_pacientes_atendidos + $1,
+        total_cirugias = total_cirugias + $2,
+        tasa_complicaciones = CASE 
+          WHEN total_cirugias + $2 = 0 THEN 0
+          ELSE ((tasa_complicaciones * total_cirugias) + $3)::NUMERIC / (total_cirugias + $2)
+        END,
+        duracion_promedio_consulta = CASE
+          WHEN total_pacientes_atendidos + $1 = 0 THEN 0
+          ELSE ((duracion_promedio_consulta * total_pacientes_atendidos) + $4) / (total_pacientes_atendidos + $1)
+        END,
+        duracion_promedio_cirugia = CASE
+          WHEN total_cirugias + $2 = 0 THEN 0
+          ELSE ((duracion_promedio_cirugia * total_cirugias) + $5) / (total_cirugias + $2)
+        END,
+        pacientes_masculinos = pacientes_masculinos + CASE WHEN $6='Masculino' THEN 1 ELSE 0 END,
+        pacientes_femeninos = pacientes_femeninos + CASE WHEN $6='Femenino' THEN 1 ELSE 0 END,
+        pacientes_otro = pacientes_otro + CASE WHEN $6='Otro' THEN 1 ELSE 0 END,
+        cirugias_baja_complejidad = cirugias_baja_complejidad + CASE WHEN $7='Baja' THEN 1 ELSE 0 END,
+        cirugias_media_complejidad = cirugias_media_complejidad + CASE WHEN $7='Media' THEN 1 ELSE 0 END,
+        cirugias_alta_complejidad = cirugias_alta_complejidad + CASE WHEN $7='Alta' THEN 1 ELSE 0 END,
+        enfermedades_comunes = CASE
+          WHEN $8 IS NOT NULL THEN
+            COALESCE(
+              (
+                SELECT jsonb_agg(
+                  CASE 
+                    WHEN e->>'name' = $8 THEN jsonb_build_object('name',$8,'count',(e->>'count')::int + 1)
+                    ELSE e
+                  END
+                )
+                FROM jsonb_array_elements(enfermedades_comunes) e
+              ),
+              jsonb_build_array(jsonb_build_object('name',$8,'count',1))
+            )
+          ELSE enfermedades_comunes
+        END,
+        fecha_actualizacion = now()
+      WHERE doctor_id = $9
+    `;
+
+    await pool.query(updateQuery, [
+      nuevaConsulta ? 1 : 0,
+      nuevaCirugia ? 1 : 0,
+      nuevaCirugia && nuevaCirugia.complicacion ? 1 : 0,
+      duracionConsulta,
+      nuevaCirugia ? nuevaCirugia.duracion_horas : 0,
+      generoPaciente,
+      nuevaCirugia ? nuevaCirugia.complejidad : null,
+      enfermedad,
+      id
+    ]);
+
+    res.json({ message: "Estadísticas actualizadas" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error actualizando estadísticas del doctor" });
+  }
+});
+
 
 // =====================================
 //  HISTORIAL MÉDICO
@@ -301,6 +518,78 @@ app.get('/api/historial/:idPaciente', async (req, res) => {
   const result = await pool.query('SELECT * FROM historial_medico WHERE id_paciente = $1', [idPaciente]);
   res.json(result.rows);
 });
+
+// Crear un nuevo registro de historial
+app.post('/api/historial', async (req, res) => {
+  const {
+    paciente_id,
+    doctor_id,
+    diagnostico,
+    tratamiento,
+    observaciones,
+    antecedentes_patologicos,
+    antecedentes_no_patologicos,
+    antecedentes_familiares,
+    alergias,
+    inmunizaciones,
+    salud_sexual
+  } = req.body;
+
+  try {
+    const result = await pool.query(`
+      INSERT INTO historial_medico (
+        paciente_id,
+        doctor_id,
+        diagnostico,
+        tratamiento,
+        observaciones,
+        antecedentes_patologicos,
+        antecedentes_no_patologicos,
+        antecedentes_familiares,
+        alergias,
+        inmunizaciones,
+        salud_sexual,
+        fecha_registro
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW())
+      RETURNING *
+    `, [
+      paciente_id,
+      doctor_id,
+      diagnostico,
+      tratamiento,
+      observaciones,
+      antecedentes_patologicos,
+      antecedentes_no_patologicos,
+      antecedentes_familiares,
+      alergias,
+      inmunizaciones,
+      salud_sexual
+    ]);
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error guardando historial" });
+  }
+});
+
+// Cambiar estado de la cita
+app.put('/api/citas/:id/finalizar', async (req, res) => {
+  const { id } = req.params;
+  const { estado } = req.body;
+
+  try {
+    const result = await pool.query(
+      "UPDATE citas SET estado = $1 WHERE id = $2 RETURNING *",
+      [estado, id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error actualizando la cita" });
+  }
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));

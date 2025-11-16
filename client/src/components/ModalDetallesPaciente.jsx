@@ -3,12 +3,19 @@ import "../assets/styles/ModalCitas.css";
 
 const ModalDetallesPaciente = ({ pacienteId, onClose }) => {
   const [data, setData] = useState(null);
+  const [cita, setCita] = useState(null);
 
   useEffect(() => {
     const load = async () => {
-      const res = await fetch(`http://localhost:5000/api/pacientes/${pacienteId}/completo`);
-      const json = await res.json();
-      setData(json);
+      // Traer datos completos del paciente
+      const resPaciente = await fetch(`http://localhost:5000/api/pacientes/${pacienteId}/completo`);
+      const jsonPaciente = await resPaciente.json();
+      setData(jsonPaciente);
+
+      // Traer la cita pendiente o más reciente del paciente
+      const resCita = await fetch(`http://localhost:5000/api/citas/doctores/${pacienteId}`);
+      const jsonCita = await resCita.json();
+      setCita(jsonCita[0]); // supondremos la primera cita de la lista
     };
     load();
   }, [pacienteId]);
@@ -30,6 +37,14 @@ const ModalDetallesPaciente = ({ pacienteId, onClose }) => {
           <p><strong>Nombre:</strong> {paciente.nombre} {paciente.apellido}</p>
           <p><strong>Email:</strong> {paciente.email}</p>
           <p><strong>Teléfono:</strong> {paciente.telefono}</p>
+          <p><strong>Género:</strong> {paciente.genero}</p>
+          <p><strong>Dirección:</strong> {paciente.direccion}</p>
+          <p><strong>Fecha de nacimiento:</strong> {new Date(paciente.fecha_nacimiento).toLocaleDateString()}</p>
+        </section>
+
+        <section>
+          <h3>Motivo de la cita</h3>
+          <p>{data.cita?.motivo || "No especificado"}</p>
         </section>
 
         <section>

@@ -65,6 +65,24 @@ button {
 button:hover {
   background: #0049c7;
 }
+.close-btn{
+    color: black;
+}
+.close-btn:hover{
+    color: white;
+    background-color: red;
+}
+
+.historial-field {
+  margin-bottom: 10px;
+}
+
+.historial-field h4 {
+  margin-bottom: 4px;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
 
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.95); }
