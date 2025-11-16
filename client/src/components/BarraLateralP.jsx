@@ -39,7 +39,19 @@ const BarraLateral = ({ colapsada: propColapsada, setColapsada: propSetColapsada
   // detect current path so the active link can be highlighted
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
   const isActive = (path) => pathname === path || pathname.startsWith(path + '/');
-  
+
+ 
+
+  const [mostrarLogout, setMostrarLogout] = useState(false);
+
+  const toggleLogout = () => {
+  setMostrarLogout(!mostrarLogout);
+};
+ const handleLogout = () => {
+  localStorage.removeItem("user");
+  window.location.href = "/";
+};
+
 
   return (
     <aside className={`barra-lateral ${colapsada ? "colapsada" : ""}`}>
@@ -54,13 +66,25 @@ const BarraLateral = ({ colapsada: propColapsada, setColapsada: propSetColapsada
         <a className={isActive('/Citas-P') ? 'active' : ''} href="/Citas-P"><FaBookMedical /> {!colapsada && "Citas"}</a>
         <a className={isActive('/Perfil') ? 'active' : ''} href="/Perfil"><FaClipboardList /> {!colapsada && "Perfil"}</a>
       </nav>
+      
+    
+<div className="usuario-bloque">
+  <div className="usuario" onClick={toggleLogout}>
+    <FaUserMd className="icono-usuario" />
+    {!colapsada && <span>{userName}</span>}
+  </div>
 
-      <div className="usuario">
-        <FaUserMd className="icono-usuario" />
-        {!colapsada && <span>{userName}</span>}
-      </div>
+  {!colapsada && mostrarLogout && (
+    <button className="btn-cerrar-sesion desplegado" onClick={handleLogout}>
+      <FaSignOutAlt /> Cerrar sesión
+    </button>
+  )}
+</div>
 
-      {/* Botón tipo ChatGPT */}
+      
+
+          
+      {/* Botón*/}
       <button
         className="boton-colapsar"
         onClick={() => setColapsada(!colapsada)}

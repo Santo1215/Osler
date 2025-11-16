@@ -26,6 +26,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  color: #1b7cb0;
 }
 
 .tabla-horario {
@@ -62,4 +63,58 @@
 .col-hora {
   background-color: #d4e4ea;
   font-weight: 600;
+}
+
+/* ✅ NUEVO: celda editable con botón eliminar */
+.celda-editable {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+.celda-editable input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.btn-eliminar {
+  background: #ffeded;
+  border: 1px solid #ffc7c7;
+  color: #b30000;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.9rem;
+}
+
+/* ✅ NUEVO: formulario para agregar bloques */
+.acciones-horario {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.acciones-horario select,
+.acciones-horario input {
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #cfcfcf;
+  font-size: 0.9rem;
+}
+
+.btn-agregar {
+  background-color: #1b7cb0;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
 }

@@ -16,12 +16,12 @@ html {
   position: relative;
 }
 
-/* Oscurecer un poco la imagen si lo deseas */
+
 .hero::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.5); /* o usa un degradado */
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .hero-content {

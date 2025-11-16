@@ -10,7 +10,8 @@
   top: 0;
   left: 0;
   transition: width 0.6s ease;
-  overflow: hidden; /* ❗️ ya no necesitamos scroll aquí */
+  overflow-y: auto;
+
 }
 
 
@@ -118,26 +119,40 @@
   margin: 0 auto;
 }
 
+
 .usuario {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
+  gap: 24px; /* ✅ aumenta separación entre ícono y texto */
   border-top: 1px solid #3d4147;
   padding: 1rem;
-  flex-shrink: 0; /* ✅ evita que el usuario desaparezca */
+  flex-shrink: 0;
   transition: all 0.3s ease;
-  margin-bottom: 20px;
+  cursor: pointer;
+  position: relative;
 }
 
-.icono-usuario{
-  width: 20px ;
-  height: 20px;
+
+.icono-usuario {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0; /* ✅ evita que se achique */
+  margin-right: 4px; /* ✅ separa del texto */
+  color: #000;
 }
+
 /* Texto del usuario con animación */
 .usuario span {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px; /* ✅ ajusta según el ancho disponible */
 }
+
 
 /* Al colapsar, centra el ícono y oculta el texto */
 .barra-lateral.colapsada .usuario {
@@ -175,3 +190,51 @@
 .boton-colapsar:hover {
   color: #38bdf8; /* azul al pasar el mouse */
 }
+
+.btn-cerrar-sesion {
+  background-color: transparent;
+  border: none;
+  color: #000; 
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin: 0.5rem 1rem 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  position: relative; 
+}
+
+
+.btn-cerrar-sesion:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #000;
+}
+
+
+.btn-cerrar-sesion.desplegado {
+  position: absolute;
+  bottom: 100%; /* aparece encima del usuario */
+  left: 1rem;
+  background-color: #fff;
+  color: #000;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  z-index: 10;
+  transition: opacity 0.2s ease;
+}
+
+.usuario-bloque {
+  position: relative;
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+  z-index: 1;
+}
+

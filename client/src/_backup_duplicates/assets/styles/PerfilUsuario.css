@@ -155,4 +155,20 @@
   .fecha-ciudad {
     flex-wrap: wrap;
   }
+
+  .btn-cerrar-sesion {
+  background-color: transparent;
+  border: none;
+  color: #e74c3c;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin: 1rem;
+}
+
+.btn-cerrar-sesion:hover {
+  color: #c0392b;
+}
 }
