@@ -15,22 +15,26 @@
 
 .perfil-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start; /* ✅ alinea arriba para evitar mezcla */
+  gap: 2rem; /* ✅ más espacio entre ícono y campos */
   margin-bottom: 2rem;
-  gap: 1rem;
 }
+
 
 .icono-usuario {
   font-size: 4rem;
   color: #333;
+  flex-shrink: 0; /* ✅ evita que se achique */
+  margin-top: 0.4rem; /* ✅ alinea verticalmente con los campos */
 }
+
 
 .perfil-nombres {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   flex: 1;
+  margin-left: 0.5rem;
 }
 
 .perfil-nombres input {
