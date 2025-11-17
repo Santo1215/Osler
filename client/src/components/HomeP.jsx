@@ -15,63 +15,69 @@ const HomeP = () => {
   const [colapsada, setColapsada] = useState(false);
 
   // ============================
-  // 1. Cargar usuario + traer datos completos
+  // 1. Cargar usuario desde sesión + backend
   // ============================
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-
-    if (!storedUser) {
-      navigate("/login");
-      return;
-    }
-
-    setUser(storedUser);
-
-    const fetchFullUser = async () => {
+    const loadUser = async () => {
       try {
-        const res = await fetch(
-          `http://localhost:5000/api/pacientes/${storedUser.id}`
-        );
-        const data = await res.json();
+        // Intentar cargar desde la sesión del servidor
+        const response = await fetch("http://localhost:5000/api/auth/current-user", {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('Usuario cargado desde sesión:', userData);
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
+          
+          // Nombre mostrado
+          const nombre = userData.nombre || userData.name || "";
+          const apellido = userData.apellido || "";
+          setNombreUsuario(apellido ? `${nombre} ${apellido}` : nombre);
+          
+          // ¿Perfil completo?
+          setNeedsProfile(!isProfileComplete(userData));
+          
+          // Cargar citas del paciente
+          if (userData?.id) fetchCitas(userData.id);
+        } else {
+          // Fallback a localStorage
+          const raw = localStorage.getItem("user");
+          if (!raw) {
+            navigate("/login");
+            return;
+          }
 
-        // Guardar usuario completo
-        localStorage.setItem("user", JSON.stringify(data));
-        setUser(data);
-
+          const storedUser = JSON.parse(raw);
+          setUser(storedUser);
+          
+          // Nombre mostrado
+          const nombre = storedUser.nombre || storedUser.name || "";
+          const apellido = storedUser.apellido || "";
+          setNombreUsuario(apellido ? `${nombre} ${apellido}` : nombre);
+          
+          setNeedsProfile(!isProfileComplete(storedUser));
+          
+          // Cargar citas del paciente
+          if (storedUser?.id) fetchCitas(storedUser.id);
+        }
       } catch (error) {
         console.error("Error cargando datos del paciente:", error);
+        // Fallback a localStorage
+        const raw = localStorage.getItem("user");
+        if (raw) {
+          const storedUser = JSON.parse(raw);
+          setUser(storedUser);
+          setNeedsProfile(!isProfileComplete(storedUser));
+        } else {
+          navigate("/login");
+        }
       }
     };
 
-    fetchFullUser();
-  }, []);
-
-  // ============================
-  // 2. Detectar perfil incompleto + cargar citas
-  // ============================
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("user");
-      if (raw) {
-        const obj = JSON.parse(raw);
-        setUser(obj);
-
-        const nombre = obj.nombre || obj.name;
-        const apellido = obj.apellido || "";
-        setNombreUsuario(apellido ? `${nombre} ${apellido}` : nombre);
-
-        setNeedsProfile(!isProfileComplete(obj));
-
-        if (obj?.id) fetchCitas(obj.id);
-      } else {
-        setUser(null);
-        setNeedsProfile(true);
-      }
-    } catch (e) {
-      setUser(null);
-      setNeedsProfile(true);
-    }
-  }, []);
+    loadUser();
+  }, [navigate]);
 
   // ============================
   // Función: traer citas del paciente
@@ -81,12 +87,8 @@ const HomeP = () => {
       const res = await fetch(
         `http://localhost:5000/api/citas-paciente/${pacienteId}`
       );
-      if (res.ok) {
-        const data = await res.json();
-        setCitas(data);
-      } else {
-        setCitas([]);
-      }
+      const data = await res.json();
+      setCitas(data);
     } catch (err) {
       console.error("Error fetching citas:", err);
       setCitas([]);
@@ -101,10 +103,7 @@ const HomeP = () => {
   const isProfileComplete = (u) => {
     if (!u) return false;
 
-    console.log("Usuario cargado:", u);
-    console.log("Teléfono:", u.telefono);
-    console.log("Dirección:", u.direccion);
-    console.log("Género:", u.genero);
+    console.log('Validando perfil del usuario:', u);
 
     const campos = [
       u.nombre,
@@ -112,27 +111,27 @@ const HomeP = () => {
       u.email,
       u.telefono,
       u.genero,
+      u.fecha_nacimiento,
     ];
 
-    return campos.every(
-      (value) => typeof value === "string" && value.trim().length > 0
+    const todosCompletos = campos.every(
+      (v) => v !== null && v !== undefined && v !== '' && v.toString().trim().length > 0
     );
+
+    console.log('¿Perfil completo?', todosCompletos);
+    console.log('Campos validados:', campos.map((campo, index) => 
+      `${['nombre', 'apellido', 'email', 'telefono', 'genero', 'fecha_nacimiento'][index]}: ${campo}`
+    ));
+
+    return todosCompletos;
   };
 
+  // ============================
+  // Cuando se guarda el perfil completo - DEFINIR ESTA FUNCIÓN
+  // ============================
   const handleSaved = (updatedUser) => {
     localStorage.setItem("user", JSON.stringify(updatedUser));
     window.location.reload();
-  };
-
-  const manejarSolicitud = () => {
-    navigate("/Citas-P");
-  };
-
-  const manejarCancelacion = (citaId) => {
-    if (window.confirm("¿Desea cancelar esta cita?")) {
-      alert("Cita cancelada correctamente.");
-      // Aquí irá la cancelación real en la BD.
-    }
   };
 
   // ============================
@@ -149,7 +148,10 @@ const HomeP = () => {
           <>
             <h2 className="saludo">Hola, {nombreUsuario}</h2>
 
-            <button className="btn-solicitar" onClick={manejarSolicitud}>
+            <button
+              className="btn-solicitar"
+              onClick={() => navigate("/Citas-P")}
+            >
               Solicitar una cita
             </button>
 
@@ -180,12 +182,6 @@ const HomeP = () => {
                     <p className="texto-card">
                       <strong>Tipo de Cita:</strong> {cita.tipo_cita || "N/A"}
                     </p>
-                    <button
-                      className="btn-cancelar"
-                      onClick={() => manejarCancelacion(cita.id)}
-                    >
-                      Cancelar cita
-                    </button>
                   </div>
                 ))
               ) : (

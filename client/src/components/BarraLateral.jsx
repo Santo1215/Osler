@@ -14,7 +14,7 @@ import {
 import { BsLayoutSidebar } from 'react-icons/bs';
 const BarraLateral = () => {
   const [colapsada, setColapsada] = useState(false);
-  const [userName, setUserName] = useState('Dr. Jose Meneses');
+  const [userName, setUserName] = useState('Gregory House');
   const [mostrarLogout, setMostrarLogout] = useState(false);
 
 const toggleLogout = () => {

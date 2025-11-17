@@ -2,16 +2,208 @@ import express from 'express';
 import cors from 'cors';
 import { pool } from './src/config/db.js';
 import dotenv from 'dotenv';
+import session from "express-session";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+
+// CONFIGURAR DOTENV PRIMERO
 dotenv.config();
 
 const app = express();
+
+// Middleware básico PRIMERO
+app.use(express.json());
 app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
   })
 );
-app.use(express.json());
+
+// Agrega esto ANTES de las rutas de passport
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
+// SESIONES después de cors
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'fallback-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Cambiar a true en producción con HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 horas
+    }
+  })
+);
+
+// PASSPORT después de sesiones
+app.use(passport.initialize());
+app.use(passport.session());
+
+// DEBUG: Verificar variables de entorno
+console.log('Google Client ID:', process.env.GOOGLE_CLIENT_ID ? 'Presente' : 'Faltante');
+console.log('Google Client Secret:', process.env.GOOGLE_CLIENT_SECRET ? 'Presente' : 'Faltante');
+console.log('Google Callback URL:', process.env.GOOGLE_CALLBACK_URL);
+
+// SERIALIZAR usuario
+passport.serializeUser((user, done) => {
+  console.log('Serializando usuario:', user);
+  done(null, user);
+});
+
+// DESERIALIZAR usuario
+passport.deserializeUser((obj, done) => {
+  console.log('Deserializando usuario:', obj);
+  done(null, obj);
+});
+
+// --- STRATEGIA GOOGLE SIMPLIFICADA ---
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        console.log('Google profile recibido:', profile);
+        const email = profile.emails[0].value;
+        const nombre = profile.displayName;
+
+        console.log('Buscando usuario con email:', email);
+
+        // 1) Buscar si es doctor
+        const doctor = await pool.query(
+          "SELECT * FROM doctores WHERE email = $1",
+          [email]
+        );
+
+        if (doctor.rows.length > 0) {
+          return done(null, {
+            role: "doctor",
+            id: doctor.rows[0].id,
+            nombre: doctor.rows[0].nombre || nombre,
+            email,
+          });
+        }
+
+        // 2) Buscar si es paciente
+        const paciente = await pool.query(
+          "SELECT * FROM pacientes WHERE email = $1",
+          [email]
+        );
+
+        if (paciente.rows.length > 0) {
+          return done(null, {
+            role: "paciente",
+            id: paciente.rows[0].id,
+            nombre: paciente.rows[0].nombre || nombre,
+            email,
+          });
+        }
+
+        return done(null, false, { message: "Usuario no registrado en el sistema" });
+
+      } catch (err) {
+        console.error('Error en Google Strategy:', err);
+        done(err, null);
+      }
+    }
+  )
+);
+
+// Agrega esta ruta en server.js
+app.get("/api/auth/current-user", async (req, res) => {
+  try {
+    if (req.isAuthenticated() && req.user) {
+      // Traer datos frescos de la base de datos
+      const userId = req.user.id;
+      const role = req.user.role;
+      
+      let userData;
+      if (role === "doctor") {
+        const result = await pool.query('SELECT * FROM doctores WHERE id = $1', [userId]);
+        userData = result.rows[0];
+      } else if (role === "paciente") {
+        const result = await pool.query('SELECT * FROM pacientes WHERE id = $1', [userId]);
+        userData = result.rows[0];
+      }
+      
+      if (userData) {
+        res.json({
+          role: role,
+          id: userData.id,
+          nombre: userData.nombre,
+          email: userData.email,
+          // Incluir otros campos según sea necesario
+          ...userData
+        });
+      } else {
+        res.status(404).json({ error: "Usuario no encontrado" });
+      }
+    } else {
+      res.status(401).json({ error: "No autenticado" });
+    }
+  } catch (error) {
+    console.error('Error obteniendo usuario actual:', error);
+    res.status(500).json({ error: "Error del servidor" });
+  }
+});
+
+// --- LOGIN CON GOOGLE ---
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { 
+    scope: ["profile", "email"],
+    prompt: "select_account" // Forzar selección de cuenta
+  })
+);
+
+// --- CALLBACK SIMPLIFICADO ---
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "http://localhost:3000/login?error=auth_failed",
+    failureMessage: true
+  }),
+  async (req, res) => {
+    try {
+      console.log('Callback exitoso, usuario:', req.user);
+      
+      if (!req.user) {
+        return res.redirect("http://localhost:3000/login?error=no_user");
+      }
+
+      // SIMPLEMENTE redirigir según el rol - el frontend ya sabrá qué hacer
+      if (req.user.role === "doctor") {
+        res.redirect("http://localhost:3000/Home");
+      } else if (req.user.role === "paciente") {
+        res.redirect("http://localhost:3000/Home-P");
+      } else {
+        res.redirect("http://localhost:3000/login?error=invalid_role");
+      }
+
+    } catch (err) {
+      console.error('Error en callback:', err);
+      res.redirect("http://localhost:3000/login?error=server_error");
+    }
+  }
+);
+// Ruta para verificar la sesión (útil para debug)
+app.get('/auth/status', (req, res) => {
+  res.json({ 
+    isAuthenticated: req.isAuthenticated(), 
+    user: req.user 
+  });
+});
 
 // Ruta de prueba
 app.get('/', (req, res) => {

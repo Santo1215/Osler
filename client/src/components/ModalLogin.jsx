@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import "../assets/styles/Modal.css";
-import { FaTimes } from "react-icons/fa";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc"; // Icono de Google
 import logo from "../assets/img/Oslerlogo.png";
 
 const ModalLogin = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
-  // Hooks must be called unconditionally at the top level
   const [formData, setFormData] = useState({
     correo: "",
     contrasena: "",
@@ -20,8 +19,12 @@ const ModalLogin = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
 
   const manejarEnvio = (e) => {
     e.preventDefault();
-    if (typeof onLogin === 'function') onLogin(formData);
-    if (typeof onClose === 'function') onClose();
+    if (typeof onLogin === "function") onLogin(formData);
+    if (typeof onClose === "function") onClose();
+  };
+
+  const iniciarConGoogle = () => {
+    window.location.href = "http://localhost:5000/auth/google";
   };
 
   return (
@@ -30,7 +33,6 @@ const ModalLogin = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
       role="dialog"
       aria-modal="true"
       onClick={(e) => {
-        // Close only when clicking the overlay (outside the modal)
         if (e.target === e.currentTarget) {
           if (typeof onClose === "function") onClose();
         }
@@ -42,14 +44,12 @@ const ModalLogin = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
         </button>
 
         <div className="logo-container">
-          <img
-            src={logo}
-            alt="Logo Osler"
-            className="logo-osler"  
-          />
+          <img src={logo} alt="Logo Osler" className="logo-osler" />
         </div>
 
-        <h2>Inicia sesión en <span>Osler</span></h2>
+        <h2>
+          Inicia sesión en <span>Osler</span>
+        </h2>
 
         <form onSubmit={manejarEnvio}>
           <input
@@ -87,14 +87,24 @@ const ModalLogin = ({ isOpen, onClose, onLogin, onSwitchToRegister }) => {
           </button>
         </form>
 
-      <p className="registro-texto">
-        ¿No tienes cuenta?{' '}
-        <button type="button" className="link-registro" onClick={() => {
-          if (typeof onSwitchToRegister === 'function') onSwitchToRegister();
-        }}>
-          Regístrate
+        {/* --- BOTÓN DE GOOGLE --- */}
+        <button type="button" className="btn-google" onClick={iniciarConGoogle}>
+          <FcGoogle size={24} style={{ marginRight: "8px" }} />
+          Continuar con Google
         </button>
-      </p>
+
+        <p className="registro-texto">
+          ¿No tienes cuenta?{" "}
+          <button
+            type="button"
+            className="link-registro"
+            onClick={() => {
+              if (typeof onSwitchToRegister === "function") onSwitchToRegister();
+            }}
+          >
+            Regístrate
+          </button>
+        </p>
       </div>
     </div>
   );

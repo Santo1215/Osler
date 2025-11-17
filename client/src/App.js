@@ -21,6 +21,7 @@ function App() {
         <Route path="/Citas" element={<CitasMedicas />} />
         <Route path='/Home-P' element={<HomeP/>}/>
         <Route path='/Citas-P' element={<CitasP/>}/>
+        <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
       </Routes>
     </Router>
   );
