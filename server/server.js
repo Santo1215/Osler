@@ -473,16 +473,183 @@ app.post("/cirugias", async (req, res) => {
     res.status(500).json({ error: "Error registrando cirugía" });
   }
 });
-
-
-// =====================================
-//  HORARIOS
-// =====================================
-app.get('/api/horarios', async (req, res) => {
-  const result = await pool.query('SELECT * FROM horarios_doctor');
-  res.json(result.rows);
+// Ruta de diagnóstico - agregar esto temporalmente
+app.get('/api/debug/routes', (req, res) => {
+  const routes = [];
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      // Rutas registradas directamente
+      routes.push({
+        path: middleware.route.path,
+        methods: Object.keys(middleware.route.methods)
+      });
+    } else if (middleware.name === 'router') {
+      // Rutas de router
+      middleware.handle.stack.forEach((handler) => {
+        if (handler.route) {
+          routes.push({
+            path: handler.route.path,
+            methods: Object.keys(handler.route.methods)
+          });
+        }
+      });
+    }
+  });
+  
+  res.json({
+    message: 'Rutas disponibles en el servidor',
+    totalRoutes: routes.length,
+    routes: routes
+  });
 });
 
+// =====================================
+//  HORARIOS DOCTORES - CRUD COMPLETO
+// =====================================
+
+// Obtener todos los horarios de un doctor específico
+app.get('/api/doctores/:id/horarios', async (req, res) => {
+  const { id } = req.params;
+  console.log(`📅 Solicitando horarios para doctor ID: ${id}`);
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM horarios_doctores 
+       WHERE doctor_id = $1 
+       ORDER BY 
+         CASE dia_semana
+           WHEN 'Lunes' THEN 1
+           WHEN 'Martes' THEN 2
+           WHEN 'Miércoles' THEN 3
+           WHEN 'Miercoles' THEN 3
+           WHEN 'Jueves' THEN 4
+           WHEN 'Viernes' THEN 5
+           WHEN 'Sábado' THEN 6
+           WHEN 'Sabado' THEN 6
+           WHEN 'Domingo' THEN 7
+         END,
+         hora_inicio`,
+      [id]
+    );
+
+    console.log(`✅ Horarios encontrados: ${result.rows.length} para doctor ${id}`);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('❌ Error obteniendo horarios del doctor:', error);
+    res.status(500).json({ message: 'Error del servidor al obtener horarios' });
+  }
+});
+
+// Crear un nuevo horario para un doctor
+app.post('/api/doctores/:id/horarios', async (req, res) => {
+  const { id } = req.params;
+  const { 
+    dia_semana, 
+    hora_inicio, 
+    hora_fin, 
+    actividad, 
+    color = '#87CEFA', 
+    observaciones 
+  } = req.body;
+
+  console.log('➕ Creando horario:', { id, dia_semana, hora_inicio, hora_fin, actividad });
+
+  try {
+    // Validar que las horas sean correctas
+    if (hora_fin <= hora_inicio) {
+      return res.status(400).json({ message: 'La hora de fin debe ser posterior a la hora de inicio' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO horarios_doctores 
+       (doctor_id, dia_semana, hora_inicio, hora_fin, actividad, color, observaciones) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+       RETURNING *`,
+      [id, dia_semana, hora_inicio, hora_fin, actividad, color, observaciones]
+    );
+
+    console.log('✅ Horario creado:', result.rows[0]);
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('❌ Error creando horario:', error);
+    
+    if (error.code === '23514') { // Check constraint violation
+      return res.status(400).json({ message: 'Datos de horario inválidos' });
+    }
+    
+    res.status(500).json({ message: 'Error del servidor al crear horario' });
+  }
+});
+
+// Actualizar un horario existente
+app.put('/api/horarios/:id', async (req, res) => {
+  const { id } = req.params;
+  const { 
+    dia_semana, 
+    hora_inicio, 
+    hora_fin, 
+    actividad, 
+    color, 
+    observaciones 
+  } = req.body;
+
+  console.log('✏️ Actualizando horario ID:', id);
+
+  try {
+    // Validar que las horas sean correctas
+    if (hora_fin <= hora_inicio) {
+      return res.status(400).json({ message: 'La hora de fin debe ser posterior a la hora de inicio' });
+    }
+
+    const result = await pool.query(
+      `UPDATE horarios_doctores 
+       SET dia_semana = $1, hora_inicio = $2, hora_fin = $3, 
+           actividad = $4, color = $5, observaciones = $6,
+           fecha_actualizacion = NOW()
+       WHERE id = $7 
+       RETURNING *`,
+      [dia_semana, hora_inicio, hora_fin, actividad, color, observaciones, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Horario no encontrado' });
+    }
+
+    console.log('✅ Horario actualizado:', result.rows[0]);
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('❌ Error actualizando horario:', error);
+    
+    if (error.code === '23514') { // Check constraint violation
+      return res.status(400).json({ message: 'Datos de horario inválidos' });
+    }
+    
+    res.status(500).json({ message: 'Error del servidor al actualizar horario' });
+  }
+});
+
+// Eliminar un horario
+app.delete('/api/horarios/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log('🗑️ Eliminando horario ID:', id);
+
+  try {
+    const result = await pool.query(
+      'DELETE FROM horarios_doctores WHERE id = $1 RETURNING *',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Horario no encontrado' });
+    }
+
+    console.log('✅ Horario eliminado:', result.rows[0]);
+    res.json({ message: 'Horario eliminado correctamente' });
+  } catch (error) {
+    console.error('❌ Error eliminando horario:', error);
+    res.status(500).json({ message: 'Error del servidor al eliminar horario' });
+  }
+});
 
 //  ESTADÍSTICAS DEL DOCTOR
 // Función para calcular estadísticas semanales
