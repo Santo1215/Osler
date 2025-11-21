@@ -1,6 +1,8 @@
 # **Osler – Sistema Integral de Gestión de Citas Médicas y Expedientes Clínicos**
 
-![Logo](Logo_Osler.png)
+<p align="center">
+  <img src="Logo_Osler.png" width="250">
+</p>
 
 
 Osler es un sistema web diseñado para optimizar la gestión de citas médicas, expedientes clínicos, pagos en línea y administración hospitalaria. Su objetivo principal es mejorar la experiencia de pacientes, médicos y personal administrativo mediante un software eficiente, seguro y moderno.
