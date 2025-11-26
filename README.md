@@ -149,26 +149,26 @@ npm install
 ```
 
 
-### 4. Ejecutar el backend
+### 4. Ejecutar el frontend
 
-Una vez realizada la instalación de npm en la terminal se ejecutar estos comandos para levantar el servidor en http://localhost:3001.
+Una vez realizada la instalación de npm en la terminal se ejecutará los siguientes comandos en los que accedemos a la carpeta cliente y iniciamos npm. Esto abrirá la interfaz gráfica de Osler.
 
-```bash
-cd server
-npm start
-```
-
-A continuació se realiza de manera similar en la terminal pero accediendo a la carpeta cliente. Esto abrirá la aplicación React en http://localhost:3000
-
-### 5. Ejecutar el frontend
 
 ```bash
 cd ../client
 npm start
 ```
 
-Una vez realizados estos pasos el sistema levanta un servidor de desarrollo y automáticamente abre el navegador en la dirección:
+Esto abrirá la aplicación React en http://localhost:3000
 
-http://localhost:3000
+### 5. Ejecutar el backend
 
-Allí se mostrará la interfaz gráfica de tu aplicación Osler.
+A continuació se realiza de manera similar en la terminal pero accediendo a la carpeta server para levantar el servidor en http://localhost:3001.
+
+```bash
+cd server
+node server.js
+```
+
+
+Una vez realizados estos pasos el sistema levanta un servidor de desarrollo y automáticamente abre el navegador.
