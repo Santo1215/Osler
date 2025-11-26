@@ -19,7 +19,7 @@ Osler es un sistema web diseñado para optimizar la gestión de citas médicas, 
 5. [Equipo de Desarrollo](#equipo-de-desarrollo)
 6. [Trabajo Colaborativo (JIRA)](#trabajo-colaborativo-jira)
 7. [Repositorio](#repositorio)
-
+8. [Cómo ejecutar el proyecto Osler en local](#Cómo-ejecutar-el-proyecto-Osler-en-local)
 ---
 
 ## 📖 **Descripción del Proyecto**
@@ -109,3 +109,66 @@ Todo el trabajo ágil y la gestión del product backlog se realizó en JIRA:
 
 🔗 **[https://github.com/Santo1215/Osler.git](https://github.com/Santo1215/Osler.git)**
 
+
+---
+
+
+
+## Cómo ejecutar el proyecto Osler en local
+
+Este proyecto está dividido en dos partes: **frontend (React)** y **backend (Node.js + Express)**. Asegúrase de tener instalado [Node.js](https://nodejs.org/) antes de comenzar.
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/tu-usuario/osler.git
+cd osler
+```
+2. Abrir el proyecto
+
+Abrir la carpeta clonada directamente en Visual Studio Code o en cualquier editor depreferencia. 
+
+### 2. Instalar dependencias
+
+En VS Code abrir una nueva terminal y correr los siguiente comandos que permiten acceder a la carpeta cliente y realizar la instalación de npm
+
+#### Frontend
+
+```bash
+cd client
+npm install
+```
+
+Repetir el proceso para la carpeta server
+
+#### Backend
+
+```bash
+cd ../server
+npm install
+```
+
+
+### 4. Ejecutar el backend
+
+Una vez realizada la instalación de npm en la terminal se ejecutar estos comandos para levantar el servidor en http://localhost:3001.
+
+```bash
+cd server
+npm start
+```
+
+A continuació se realiza de manera similar en la terminal pero accediendo a la carpeta cliente. Esto abrirá la aplicación React en http://localhost:3000
+
+### 5. Ejecutar el frontend
+
+```bash
+cd ../client
+npm start
+```
+
+Una vez realizados estos pasos el sistema levanta un servidor de desarrollo y automáticamente abre el navegador en la dirección:
+
+http://localhost:3000
+
+Allí se mostrará la interfaz gráfica de tu aplicación Osler.
