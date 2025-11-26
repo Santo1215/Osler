@@ -116,7 +116,7 @@ Todo el trabajo ágil y la gestión del product backlog se realizó en JIRA:
 
 ## Cómo ejecutar el proyecto Osler en local
 
-Este proyecto está dividido en dos partes: **frontend (React)** y **backend (Node.js + Express)**. Asegúrase de tener instalado [Node.js](https://nodejs.org/) antes de comenzar.
+Este proyecto está dividido en dos partes: **frontend (React)** y **backend (Node.js + Express)**. Asegurese de tener instalado [Node.js](https://nodejs.org/) antes de comenzar.
 
 ### 1. Clonar el repositorio
 
